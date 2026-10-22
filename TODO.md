@@ -5,6 +5,12 @@
   - [x] Preshing's 4 memory-ordering posts
   - [x] McKenney Memory Barrieor c1-4
   - [x] CiA c5
-  - [ ] Tools Work through §14 
-  - [ ] Build measurement harness
-  - [ ] Build false-sharing toy
+  - [x] CSAPP 3.2-5
+  - [x] Tools Work through §14 
+  - [x] Build measurement harness
+  - [x] SPSC ring
+  - [ ] CiA 6-11
+  - [ ] OSTEP 31-33
+  - [ ] Stokes Inside the Machine (skip case studies)
+  - [ ] Dreppler 1-3 
+  - [ ] CODDD sectios alongside

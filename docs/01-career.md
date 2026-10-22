@@ -21,7 +21,7 @@ Match the Orderbook/Backtester entries: verb-led, mechanism stated, measured num
 
 **Keyword discipline — what NOT to add:** industry terms you haven't built (FIX/OUCH parsing, DPDK, RDMA, FPGA) are probe-bait, not signal — every one converts a defensible bullet into a question you can't survive. They live in the design doc's industry-context Q&A and in interview answers attached to your measurements, never on the page.
 
-**Conditional tier — keywords that graduate when the code lands, and only on the project that built them:** *kernel bypass* and *ITCH parsing* are no longer permanent exclusions; the Orderbook ingestion ladder builds both ([00-master.md](00-master.md) §16.2).
+**Conditional tier — keywords that graduate when the code lands, and only on the project that built them:** *kernel bypass* and *ITCH parsing* are no longer permanent exclusions; the Orderbook ingestion ladder builds both ([00-master.md](00-master.md) §15.2).
 
 - **ITCH:** the feed bullet may say "ITCH-style" today, with "I modelled rather than parsed ITCH, here's the tradeoff" as the answer. Once the real file runs the same harness, it upgrades to "parsed NASDAQ ITCH 5.0 (MoldUDP64 framing, sequence-gap handling) and replayed a real message mix" — on the Orderbook block, with the boundary that it is a sample file, not a production feed handler.
 - **Kernel bypass:** stays off the page until a rung ships, then appears **only on the Orderbook block**, in the form the rung supports ("AF_XDP user-space data path, copy mode" is a different and equally honest claim from "zero-copy"). It never appears on the engine block — that repo's ingress is loopback by design.
@@ -53,11 +53,11 @@ Run against the repos on this machine by grepping the code each claim names. **S
 | Claim | Status | Evidence |
 | --- | --- | --- |
 | p50 add 142ns, cancel 125ns, 3-level sweep 357ns | **stale — re-measure** | Those numbers exist only in `docs/prototype/benchmark/benchmark_results.md` (`BM_BuyEmptyBook` et al.) — the **pre-rewrite prototype**, measured through the old `Orderbook`/`Trader` API, which is different code from today's book. There is no `docs/benchmark/` at the repo root; the README's results table is empty pending the harness; and `benchmarks/main.cpp` is fully commented out, so `orderbook_bench` builds an empty binary. Do not ship this row. The replacement comes from the `Orderbook_Vector` vs `Orderbook_Pool` replay comparison |
-| Pooled intrusive FIFO per level, O(1) best-quote, zero hot-path allocations | **target** | levels are a searchable vector in `orderbook_vector.h`; orders are `std::list<Order>` nodes; zero `pmr`/`intrusive`/pool hits. Ladder dropped (would be a fourth container rewrite — cap at [00-master.md](00-master.md) §16.1) |
+| Pooled intrusive FIFO per level, O(1) best-quote, zero hot-path allocations | **target** | levels are a searchable vector in `orderbook_vector.h`; orders are `std::list<Order>` nodes; zero `pmr`/`intrusive`/pool hits. Ladder dropped (would be a fourth container rewrite — cap at [00-master.md](00-master.md) §15.1) |
 | Generational slot map for the order-ID index | **target** | `idMap` is `std::unordered_map<OrderId, std::list<Order>::iterator>` — `orderbook_vector.h:39` |
 | PMR-pooled intrusive FIFO per level | **target** | zero `pmr`/`intrusive`/pool hits |
 | OFI / microprice / queue-position feature layer | **target** | zero `microprice`/`imbalance`/`queuePosition` hits |
-| AF_XDP kernel-bypass ingestion | **target** | zero `xdp`/`af_xdp` hits; spec and rung ladder in [00-master.md](00-master.md) §16.2 |
+| AF_XDP kernel-bypass ingestion | **target** | zero `xdp`/`af_xdp` hits; spec and rung ladder in [00-master.md](00-master.md) §15.2 |
 | Wire-to-wire, hardware-timestamped latency | **target** | no `SO_TIMESTAMPING`/PHC code; NIC capability unverified (`ethtool -T` is step 0) |
 | Parsed NASDAQ ITCH 5.0 message mix | **target** | zero `itch`/`moldudp` hits; the feed is modelled, not parsed |
 | Linear-vs-binary-vs-branchless search comparison | **implementation shipped, comparison still target** | `include/search_policies.h` ships all three; `orderbook_vector.h` is templated on the policy; `tests/search_policies_test.cc` passes (58 of the 123 in the suite). Only the head-to-head *comparison* is missing, and it is gated on the replay harness, not the implementation |
@@ -76,7 +76,7 @@ Run against the repos on this machine by grepping the code each claim names. **S
 
 The Orderbook block currently ships one defensible bullet of four, and the GPU bullet ships none. Appendix A is a TARGET document and rule 1 covers `[N]` placeholders — but it does not cover an *unbracketed* assertion. `Cacheline-aligned, NUMA-pinned hot path` has no bracket, no number, and no code, and it reads as shipped. Extend rule 1: **an unbracketed assertion needs code behind it, not just a bracketed number.**
 
-**The `Replay & Validation` bullet is the same failure, and worse, because it is specific.** Appendix A and B both ship *"Implemented ITCH 5.0 ingestion with sequence-gap detection and a Synced/Recovering resync state machine"* — with no hedge, no bracket, and no `itch`/`moldudp` in the repo. The conditional-tier note above says the bullet "may say ITCH-style today"; the bullet does not say that, so the deployed page is ahead of the code on the one claim a quant interviewer probes first. Two ways out, and only two: build it (§16.2 makes it rung-0 work on the existing loopback feed — ~2–4 days, no NIC, no root), or downgrade the wording to "ITCH-style" and keep the tradeoff answer. Leaving it as written is the option that fails in the room.
+**The `Replay & Validation` bullet is the same failure, and worse, because it is specific.** Appendix A and B both ship *"Implemented ITCH 5.0 ingestion with sequence-gap detection and a Synced/Recovering resync state machine"* — with no hedge, no bracket, and no `itch`/`moldudp` in the repo. The conditional-tier note above says the bullet "may say ITCH-style today"; the bullet does not say that, so the deployed page is ahead of the code on the one claim a quant interviewer probes first. Two ways out, and only two: build it (§15.2 makes it rung-0 work on the existing loopback feed — ~2–4 days, no NIC, no root), or downgrade the wording to "ITCH-style" and keep the tradeoff answer. Leaving it as written is the option that fails in the room.
 
 Separately, the C++ version claim has **inverted**: `Orderbook/CMakeLists.txt:4` now sets `CMAKE_CXX_STANDARD 23`, so the README's `C++23` is correct and the resume's `C++17` is the stale side. Fix the resume. The lesson matches the one this audit exists for: both claims were checked against a snapshot and neither was re-checked. **An audit that is not re-run is an assertion.**
 
@@ -254,7 +254,7 @@ Weighting: ~70% coding/systems, ~20% design + math, ~10% behavioral/domain. Gaps
 - **IO:** blocking/non-blocking, `select`/`poll`/`epoll` (LT/ET), reactor, `io_uring` (SQ/CQ), `SO_BUSY_POLL`, zero-copy (`sendfile`, `splice`)
 - Allocation: malloc internals (bins/tcache), mmap threshold, fragmentation, pools/arenas/slabs, jemalloc/tcmalloc
 - Observability: `strace`/`ltrace`, `/proc` (maps, smaps, status), `perf stat/record/top`, `vmstat`, `numastat`
-- Kernel-bypass: **AF_XDP is built** on the Orderbook ([00-master.md](00-master.md) §16.2) — UMEM, the four rings, copy vs. zero-copy modes, generic vs. native XDP, `SO_BUSY_POLL`, hardware timestamps. DPDK and ef_vi stay know-why-not-how
+- Kernel-bypass: **AF_XDP is built** on the Orderbook ([00-master.md](00-master.md) §15.2) — UMEM, the four rings, copy vs. zero-copy modes, generic vs. native XDP, `SO_BUSY_POLL`, hardware timestamps. DPDK and ef_vi stay know-why-not-how
 
 *Coverage: OSTEP spine. Second-strongest axis.*
 
