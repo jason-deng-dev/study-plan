@@ -6,7 +6,7 @@
   - [x] McKenney Memory Barrieor c1-4
   - [x] CiA c5
   - [x] CSAPP 3.2-5
-  - [x] Tools Work through §14 
+  - [x] Tools Work through §3 
   - [x] Build measurement harness
   - [x] SPSC ring
   - [ ] CiA 6-11
